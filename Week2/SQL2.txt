@@ -1,0 +1,58 @@
+1.
+
+CREATE OR REPLACE PROCEDURE ProcessMonthlyInterest IS
+BEGIN
+  -- Update all savings accounts by adding 1% interest
+  UPDATE accounts
+  SET balance = balance + (balance * 0.01)
+  WHERE account_type = 'SAVINGS';
+
+  COMMIT;
+END;
+
+2.
+CREATE OR REPLACE PROCEDURE UpdateEmployeeBonus (
+  p_department_id IN NUMBER,
+  p_bonus_percent IN NUMBER
+) IS
+BEGIN
+  UPDATE employees
+  SET salary = salary + (salary * (p_bonus_percent / 100))
+  WHERE department_id = p_department_id;
+
+  COMMIT;
+END;
+
+3.
+CREATE OR REPLACE PROCEDURE TransferFunds (
+  p_from_account_id IN NUMBER,
+  p_to_account_id   IN NUMBER,
+  p_amount          IN NUMBER
+) IS
+  v_balance NUMBER;
+BEGIN
+  -- Check balance of source account
+  SELECT balance INTO v_balance
+  FROM accounts
+  WHERE account_id = p_from_account_id
+  FOR UPDATE;
+
+  IF v_balance < p_amount THEN
+    RAISE_APPLICATION_ERROR(-20001, 'Insufficient balance.');
+  END IF;
+
+  -- Deduct from source account
+  UPDATE accounts
+  SET balance = balance - p_amount
+  WHERE account_id = p_from_account_id;
+
+  -- Add to destination account
+  UPDATE accounts
+  SET balance = balance + p_amount
+  WHERE account_id = p_to_account_id;
+
+  COMMIT;
+END;
+/
+
+
